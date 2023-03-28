@@ -23,21 +23,13 @@ def main(args):
     free_timings_sec = get_timings(srt_path=path_to_subtitles, in_seconds=True, free=True)
 
     path_to_cut_videos = path_to_folder + '/cutted_by_timings'
-<<<<<<< HEAD
-    new_timings = cut_by_timings(path=path_to_mkv_file, timings=free_timings_sec, output_folder_path=path_to_cut_videos)
-=======
     cut_by_timings(path=path_to_mkv_file, timings=free_timings_sec, output_folder_path=path_to_cut_videos)
-<<<<<<< HEAD
-    
->>>>>>> 51cf4c9 (inf)
-=======
     free_video_folder = global_scene_cut(path_to_cut_videos=path_to_cut_videos)
     all_texts = []
     for fold in free_video_folder:
         all_texts.append(blip_scene_inf(model_engine, folder=fold,pipe_sum=summarizer))
 
 
->>>>>>> 00c7b16 (ьфчагт)
     """
     your piece of code
     """

@@ -269,7 +269,7 @@ def get_timings(srt_path, free=True, in_seconds=True):
 
 
 
-def cut_by_timings(path, timings, output_folder_path)
+def cut_by_timings(path, timings, output_folder_path):
     clip = VideoFileClip(path)
 
     new_timings = []

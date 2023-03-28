@@ -144,13 +144,15 @@ class BlipEngine:
 
         return outputs
 
-    def caption(self, inputs, **generate_kwargs) -> str:
+    def caption(self, raw_image, **generate_kwargs) -> str:
+        inputs = self.processor(raw_image, ' ', return_tensors='pt')
         out = self.generate_caption(inputs["pixel_values"], **generate_kwargs)
         caption = self.processor.decode(out[0], skip_special_tokens=True)
         return caption
 
-    def answer(self, **inputs)->str:
-        out = self.generate_answer(**inputs)
+    def answer(self,raw_image, question, **generate_kwargs)->str:
+        inputs = self.processor(raw_image, question, return_tensors='pt')
+        out = self.generate_answer(**inputs, **generate_kwargs)
         return out
 
  

@@ -90,3 +90,7 @@ class Translator:
         with torch.no_grad():
             hypotheses = self.translate_model.generate(**inputs, **kwargs)
         return self.translate_model.decode(hypotheses[0], skip_special_tokens=True)
+    
+
+
+

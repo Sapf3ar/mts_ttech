@@ -1,7 +1,10 @@
 from utils import *
+from infer_text_models import Translator, Text2Audio
+from transformers import pipeline
+from infer import BlipEngine
 
-
-def main(path_to_mkv_file):
+def main(args):
+    summarizer = pipeline("summarization", model="philschmid/bart-large-cnn-samsum")
 
     path_to_folder = path_to_mkv_file[:path_to_mkv_file.rfind('/')]
     film_name = path_to_mkv_file.split('/')[-1].split('.')[0]
@@ -13,7 +16,7 @@ def main(path_to_mkv_file):
     get_audio(input_path=path_to_mkv_file, output_path=path_to_file_for_output_audio)
 
 
-
+    model_engine = BlipEngine(" ") #path to weights
     get_srt(path=path_to_folder)
 
     path_to_subtitles = path_to_folder + '/' + film_name + '_subtitles_1.srt'
@@ -24,8 +27,17 @@ def main(path_to_mkv_file):
     new_timings = cut_by_timings(path=path_to_mkv_file, timings=free_timings_sec, output_folder_path=path_to_cut_videos)
 =======
     cut_by_timings(path=path_to_mkv_file, timings=free_timings_sec, output_folder_path=path_to_cut_videos)
+<<<<<<< HEAD
     
 >>>>>>> 51cf4c9 (inf)
+=======
+    free_video_folder = global_scene_cut(path_to_cut_videos=path_to_cut_videos)
+    all_texts = []
+    for fold in free_video_folder:
+        all_texts.append(blip_scene_inf(model_engine, folder=fold,pipe_sum=summarizer))
+
+
+>>>>>>> 00c7b16 (ьфчагт)
     """
     your piece of code
     """

@@ -25,9 +25,9 @@ def main(args):
     path_to_cut_videos = path_to_folder + '/cutted_by_timings'
     cut_by_timings(path=path_to_mkv_file, timings=free_timings_sec, output_folder_path=path_to_cut_videos)
     free_video_folder = global_scene_cut(path_to_cut_videos=path_to_cut_videos)
-    all_texts = []
+    all_texts = dict()
     for fold in free_video_folder:
-        all_texts.append(blip_scene_inf(model_engine, folder=fold,pipe_sum=summarizer))
+        all_texts[fold] = blip_scene_inf(model_engine, folder=fold,pipe_sum=summarizer)
 
 
     """

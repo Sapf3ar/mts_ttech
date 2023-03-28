@@ -281,5 +281,5 @@ def cut_by_timings(path, timings, output_folder_path):
             new_timings.append([t_start, t_end])
             part += 1
             cut = clip.subclip(t_start, t_end)
-            cut.write_videofile(f"{output_folder_path}/part_{part}.mp4", codec='libx264', audio=False, verbose=False)
+            cut.write_videofile(f"{output_folder_path}/part_{t_start}_{t_end}.mp4", codec='libx264', audio=False, verbose=False)
     return new_timings

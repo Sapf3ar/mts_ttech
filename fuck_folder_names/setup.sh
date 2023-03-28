@@ -2,7 +2,9 @@
 !pip install -q torchaudio omegaconf
 !pip install pydub -q
 !pip install num2words -q
+!pip install git+https://github.com/huggingface/transformers
 
+!pip install openvino-dev[torch, onnx]
 
 
 

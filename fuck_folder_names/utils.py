@@ -70,7 +70,7 @@ class Text2Audio:
                                             speaker='v3_1_ru')
         self.audio_model.to(device)
         
-    def text2audio(self, texts, speaker='xenia', sample_rate=48000, ssml=False, put_accent=True, put_yo=True, save=False,
+    def write_voice(self, texts, speaker='xenia', sample_rate=48000, ssml=False, put_accent=True, put_yo=True, save=False,
                 output_path='out_audio.wav', format='wav', bits_per_sample=64, encoding="PCM_S"):
         '''
         speakers   :  'aidar', 'baya', 'kseniya', 'xenia', 'eugene', 'random'

@@ -34,75 +34,6 @@ class myMKV(merge.MkvMerge):
 
 
 
-def to_ssml(text):
-    start = '''
-              <speak>
-              <p>
-            '''
-
-    end = '''
-            </p>
-            </speak>
-          '''
-
-    return start + text + end
-
-
-def num_to_words(text):
-    after_spliting = text.split()
-
-    for index in range(len(after_spliting)):
-        if after_spliting[index].isdigit():
-            after_spliting[index] = num2words(after_spliting[index], lang='ru')
-    numbers_to_words = ' '.join(after_spliting)
-    return numbers_to_words
-
-class Text2Audio:
-    def __init__(self) -> None:
-        torch.hub.download_url_to_file('https://raw.githubusercontent.com/snakers4/silero-models/master/models.yml',
-                               'latest_silero_models.yml',
-                               progress=False)
-        OmegaConf.load('latest_silero_models.yml')
-        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.audio_model, example_text = torch.hub.load(repo_or_dir='snakers4/silero-models',
-                                            model='silero_tts',
-                                            language='ru',
-                                            speaker='v3_1_ru')
-        self.audio_model.to(device)
-        
-    def write_voice(self, texts, speaker='xenia', sample_rate=48000, ssml=False, put_accent=True, put_yo=True, save=False,
-                output_path='out_audio.wav', format='wav', bits_per_sample=64, encoding="PCM_S"):
-        '''
-        speakers   :  'aidar', 'baya', 'kseniya', 'xenia', 'eugene', 'random'
-        sample_rate:  8000, 24000, 48000
-        '''
-
-        for i in range(len(texts)):
-            texts[i] = num_to_words(texts[i])
-            texts[i] = to_ssml(texts[i])
-
-            if ssml:
-                audio = self.audio_model.apply_tts(ssml_text=texts[i],
-                                        speaker=speaker,
-                                        sample_rate=sample_rate,
-                                        put_accent=put_accent,
-                                        put_yo=put_yo)
-            else:
-                audio = self.audio_model.apply_tts(text=texts[i],
-                                        speaker=speaker,
-                                        sample_rate=sample_rate,
-                                        put_accent=put_accent,
-                                        put_yo=put_yo)
-
-            if save:
-                torchaudio.save(filepath=os.path.join(output_path, f'audio_{i}.wav'),
-                                format=format,
-                                src=audio[None, :],
-                                sample_rate=sample_rate,
-                                encoding=encoding,
-                                bits_per_sample=bits_per_sample)
-
-    # return audio[None,:]
 
 
 
@@ -337,7 +268,7 @@ def get_timings(srt_path, free=True, in_seconds=True):
             return dialogue_timings
 
 
-<<<<<<< HEAD
+
 def cut_by_timings(path, timings, output_folder_path):
     clip = VideoFileClip(path)
 
@@ -349,5 +280,3 @@ def cut_by_timings(path, timings, output_folder_path):
             part += 1
             cut = clip.subclip(t_start, t_end)
             cut.write_videofile(f"{output_folder_path}/part_{part}.mp4", codec='libx264', audio=False, verbose=False)
-=======
->>>>>>> 70a0bd7 (check this inference)

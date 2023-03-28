@@ -269,14 +269,17 @@ def get_timings(srt_path, free=True, in_seconds=True):
 
 
 
-def cut_by_timings(path, timings, output_folder_path):
+def cut_by_timings(path, timings, output_folder_path)
     clip = VideoFileClip(path)
 
+    new_timings = []
     part = 1
-    for timing in timings:
+    for timing in free_timings:
         t_start = timing[0]
         t_end = timing[1]
         if t_end - t_start > 3:
+            new_timings.append([t_start, t_end])
             part += 1
             cut = clip.subclip(t_start, t_end)
             cut.write_videofile(f"{output_folder_path}/part_{part}.mp4", codec='libx264', audio=False, verbose=False)
+    return new_timings

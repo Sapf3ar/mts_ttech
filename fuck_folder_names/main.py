@@ -20,7 +20,7 @@ def main(path_to_mkv_file):
     free_timings_sec = get_timings(srt_path=path_to_subtitles, in_seconds=True, free=True)
 
     path_to_cut_videos = path_to_folder + '/cutted_by_timings'
-    cut_by_timings(path=path_to_mkv_file, timings=free_timings_sec, output_folder_path=path_to_cut_videos)
+    new_timings = cut_by_timings(path=path_to_mkv_file, timings=free_timings_sec, output_folder_path=path_to_cut_videos)
     """
     your piece of code
     """

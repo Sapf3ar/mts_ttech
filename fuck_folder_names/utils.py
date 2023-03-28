@@ -9,6 +9,7 @@ import subprocess
 
 
 from moviepy.editor import *
+from moviepy.video.io.VideoFileClip import VideoFileClip
 import torchaudio
 import num2words
 
@@ -331,3 +332,16 @@ def get_timings(srt_path, free=True, in_seconds=True):
 
         else:
             return dialogue_timings
+
+
+def cut_by_timings(path, timings, output_folder_path):
+    clip = VideoFileClip(path)
+
+    part = 1
+    for timing in timings:
+        t_start = timing[0]
+        t_end = timing[1]
+        if t_end - t_start > 3:
+            part += 1
+            cut = clip.subclip(t_start, t_end)
+            cut.write_videofile(f"{output_folder_path}/part_{part}.mp4", codec='libx264', audio=False, verbose=False)

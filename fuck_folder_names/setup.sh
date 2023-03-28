@@ -3,8 +3,12 @@
 !pip install pydub -q
 !pip install num2words -q
 !pip install git+https://github.com/huggingface/transformers
+<<<<<<< HEAD
 !pip install transformers sentencepiece -q
 
+=======
+!pip install scenedetect[opencv] --upgrade
+>>>>>>> 12ff6d6 (inf)
 !pip install openvino-dev[torch, onnx]
 
 

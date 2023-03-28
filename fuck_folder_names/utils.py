@@ -6,8 +6,9 @@ import sys
 import re
 import json
 import subprocess
-
-
+import glob
+import cv2
+from torchvision import transforms
 from moviepy.editor import *
 from moviepy.video.io.VideoFileClip import VideoFileClip
 import torchaudio
@@ -23,15 +24,18 @@ from pydub import AudioSegment
 
 import torch
 from omegaconf import OmegaConf
-
-
+from scenedetect import detect, ContentDetector,  split_video_ffmpeg
+from scenedetect import open_video, SceneManager, split_video_ffmpeg
+from scenedetect.detectors import ContentDetector
+from scenedetect.video_splitter import split_video_ffmpeg
+from typing import List, Any
 
 class myMKV(merge.MkvMerge):
 
     def create(self):
         check_call([self.command] + list(map(str, self.arguments)))
 
-
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 
@@ -272,14 +276,139 @@ def get_timings(srt_path, free=True, in_seconds=True):
 def cut_by_timings(path, timings, output_folder_path):
     clip = VideoFileClip(path)
 
-    new_timings = []
     part = 1
-    for timing in free_timings:
+    for timing in timings:
         t_start = timing[0]
         t_end = timing[1]
         if t_end - t_start > 3:
-            new_timings.append([t_start, t_end])
             part += 1
             cut = clip.subclip(t_start, t_end)
-            cut.write_videofile(f"{output_folder_path}/part_{str(t_start).split('.')[0]}_{str(t_start).split('.')[1]}_{str(t_end).split('.')[0]}_{str(t_end).split('.')[1]}.mp4", codec='libx264', audio=False, verbose=False)
-    return new_timings
+
+            cut.write_videofile(os.path.join(output_folder_path, f"part_{part}.mp4", codec='libx264', audio=False, verbose=False))
+ 
+ 
+def split_video_into_scenes(video_path, save_path, threshold=30.0):
+        # Open our video, create a scene manager, and add a detector.
+        video = open_video(video_path)
+        scene_manager = SceneManager()
+        scene_manager.add_detector(
+            ContentDetector(threshold=threshold))
+        scene_manager.auto_downscale = False
+        scene_manager.downscale = 1
+        scene_manager.detect_scenes(video, show_progress=True)
+        scene_list = scene_manager.get_scene_list()
+        pruned_scenes = []
+        for start, end in scene_list:
+            if int(end) - int(start) < 4:   
+                pass
+            else:
+                pruned_scenes.append([start, end])
+        os.chdir(save_path)
+        split_video_ffmpeg(video_path, pruned_scenes, show_progress=False)
+        return pruned_scenes
+
+def absoluteFilePaths(directory):
+    for dirpath,_,filenames in os.walk(directory):
+        for f in filenames:
+            yield os.path.abspath(os.path.join(dirpath, f))
+
+def make_dir(dir_path):
+
+    try:
+
+        os.mkdir(dir_path)
+
+    except OSError:
+
+        pass
+
+    return dir_path
+
+def global_scene_cut(path_to_cut_videos:str):
+    video_folders = []
+    for file_path in glob.glob(os.path.join(path_to_cut_videos, '*.mp4')):
+        make_dir(file_path[:-4])
+        os.chdir(file_path[:-4])
+        split_video_into_scenes(file_path)
+        os.chidr("..")
+        video_folders.append(file_path[:-4])
+    return video_folders
+
+def question_set_inf(model, frames):
+    questions = [
+
+    'What is the main event on a video?',
+    "What is shown on the picture?",
+    "What humans are doing on a video?",
+    "Where are the main objects on a video are located?",
+    "What actions are perfomed on a video?", 
+    'Is there any humans on the picture? Where are they located?',
+    "What are the main objects on a video?"
+    "How does scene changes throughout the video?"
+    'How much humans are on the photo?',
+    "How much non-human objects are on the photo?"
+    "What are the main non-human objects are on the photo?",
+    'How much people are on the photo? Answer with one number'
+
+                ]
+    texts =[]
+    texts.append(model.caption(frames, min_len=15, max_len=200))
+    for q in questions:
+        texts.append(model.answer(frames, q, min_len=10, max_len=200))
+    return texts
+
+def blip_scene_inf(model, folder, pipe_sum):
+    folder_text = dict()
+    videos = glob.glob(os.path.join(folder, '*.mp4'))
+    for p in videos:
+        frames = read_video(p, frames_num=256)
+        texts = question_set_inf(frames=frames, model=model)
+        folder_text[p] = pipe_sum(" ".join(texts)) # ЕГОР ДОБАВЬ АДАПТИВНУЮ ДЛИНУ В ЗАВИСИМОСТИ ОТ ДЛМНЫ МЕСТА В АУДИО                
+    return folder_text
+
+
+def read_video(path, transform=None, frames_num=1):
+    frames = []
+    cap = cv2.VideoCapture(path)
+    
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
+    
+    length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    # print(f"{length=} {fps=}")
+    N = length//(frames_num)
+    # N=5
+
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
+        ])
+    
+    current_frame = 1
+    for i in range(length):
+        ret, frame = cap.read(current_frame)
+        
+        if ret and i==current_frame and len(frames)<frames_num:
+           
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            frame = cv2.resize(frame, (384, 384), interpolation = cv2.INTER_CUBIC)
+            frame = transform(frame).unsqueeze(0).to(device)
+            frames.append(frame)
+            current_frame += N
+        
+    cap.release()
+    return frames
+
+
+def prune_video(video:np.ndarray, frames_num:int) -> np.ndarray:
+
+# def cut_by_scenes(timecodes:List[Any], video:np.ndarray, fps:int, **prune_args)->None:
+#     for start, end in timecodes:
+#         if int(end) - int(start) < 4:
+#             pass
+#         else:
+#             frame_pos_start = fps*int(start)
+#             frame_pos_end = fps*int(end)
+            
+
+   
+

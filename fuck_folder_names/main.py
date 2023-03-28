@@ -20,7 +20,12 @@ def main(path_to_mkv_file):
     free_timings_sec = get_timings(srt_path=path_to_subtitles, in_seconds=True, free=True)
 
     path_to_cut_videos = path_to_folder + '/cutted_by_timings'
+<<<<<<< HEAD
     new_timings = cut_by_timings(path=path_to_mkv_file, timings=free_timings_sec, output_folder_path=path_to_cut_videos)
+=======
+    cut_by_timings(path=path_to_mkv_file, timings=free_timings_sec, output_folder_path=path_to_cut_videos)
+    
+>>>>>>> 51cf4c9 (inf)
     """
     your piece of code
     """
@@ -29,7 +34,8 @@ def main(path_to_mkv_file):
 
     os.mkdir(path_to_folder + '/generated_audios')
     path_to_path_with_generated_audios = path_to_folder + '/generated_audios'
-    text2audio(texts=texts, model=audio_model, output_path=path_to_path_with_generated_audios, ssml=True, save=True)
+    silero_model = Text2Audio()
+    silero_model.write_voice(texts=texts, output_path=path_to_path_with_generated_audios, ssml=True, save=True)
 
     audio_merge(main_file=path_to_mkv_file, second_path=path_to_path_with_generated_audios, timings=timings, output_file=path_to_folder + '/audio/main_audio_changed.wav')
 

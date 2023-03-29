@@ -17,7 +17,9 @@ class BlipEngine:
     def __init__(self, main_path:str):
         """
         Initialization class parameters
+
         """
+        print('Initialiazing model...')
         self.load_models(main_path=main_path)
         
         self.vision_model_out = self.vision_model.output(0)
@@ -35,6 +37,7 @@ class BlipEngine:
                 return path.split('.')[0]
             
             with py7zr.SevenZipFile(path, 'r') as archive:
+                print(f"Extracting archive to {path.split('.')[0]}")
                 archive.extractall(path=".")
             return path.split('.')[0]
         return path
@@ -60,7 +63,7 @@ class BlipEngine:
 
         model_onnx = ie.read_model(model=os.path.join(main_path, paths[3]))
         visual_engine = ie.compile_model(model=model_onnx, device_name="GPU")
-
+        print("All model loaded..")
         self.vision_model = visual_engine
         self.text_encoder = encoder_engine
         self.text_decoder = decoder_engine

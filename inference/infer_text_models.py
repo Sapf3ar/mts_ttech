@@ -73,9 +73,7 @@ class Text2Audio:
     def write_voice(self, texts, local_timings, speaker='xenia', sample_rate=48000, ssml=False, put_accent=True,
                     put_yo=True,
 
-    def write_voice(self, texts, local_timings, speaker='xenia', sample_rate=48000, ssml=False, put_accent=True, put_yo=True,
-                    save=False,
-                    output_path='out_audio.wav', format='wav', bits_per_sample=64, encoding="PCM_S"):
+    def write_voice(self, texts, local_timings, speaker='xenia', sample_rate=48000, ssml=False, put_accent=True, put_yo=True, save=False, output_path='out_audio.wav', format='wav', bits_per_sample=64, encoding="PCM_S"):
         '''
         speakers   :  'aidar', 'baya', 'kseniya', 'xenia', 'eugene', 'random'
         sample_rate:  8000, 24000, 48000

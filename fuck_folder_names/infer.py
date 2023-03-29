@@ -14,7 +14,7 @@ class BlipEngine:
     """
     Model class for inference BLIP model with OpenVINO
     """
-    def __init__(self, config:int, main_path:str):
+    def __init__(self, main_path:str):
         """
         Initialization class parameters
         """

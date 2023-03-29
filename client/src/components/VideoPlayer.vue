@@ -20,7 +20,6 @@ import forward_icon from "@/assets/forward_icon.svg"
 import skip_icon from "@/assets/skip_icon.svg"
 import rewind_icon from "@/assets/rewind_icon.svg"
 import moviePath from "@/assets/first_to_the_gate.mp4"
-// import moviePath from "@/assets/first_to_the_gate.mkv"
 
 export default {
   name: "VideoPlayer",
@@ -59,13 +58,13 @@ export default {
           },
         },
         sources: [
-          // {
-          //   src: moviePath,
-          //   type: "video/mp4",
-          // },
+          {
+            src: "./img/first_to_the_gate.mkv",
+            type: "video/x-matroska",
+          },
           {
             src: moviePath,
-            type: "video/x-matroska",
+            type: "video/mp4",
           },
           // {
           //   src: "https://d2zihajmogu5jn.cloudfront.net/bipbop-advanced/bipbop_16x9_variant.m3u8",

@@ -295,6 +295,7 @@ class BlipEngine:
     def answer(self,raw_image, question, **generate_kwargs)->str:
         
         out = self.generate_answer(raw_image,question, **generate_kwargs)
-        return out
+        caption = self.processor.decode(out[0], skip_special_tokens=True)
+        return caption
 
  

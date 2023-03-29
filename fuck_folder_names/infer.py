@@ -25,7 +25,31 @@ class BlipEngine:
         self.vision_model_out = self.vision_model.output(0)
         
         self.text_encoder_out = self.text_encoder.output(0)
-        
+        self.sep_token_id = 102
+        self.text_config  = {
+            "attention_probs_dropout_prob": 0.0,
+            "bos_token_id": 30522,
+            "encoder_hidden_size": 768,
+            "eos_token_id": 2,
+            "hidden_act": "gelu",
+            "hidden_dropout_prob": 0.0,
+            "hidden_size": 768,
+            "initializer_factor": 1.0,
+            "initializer_range": 0.02,
+            "intermediate_size": 3072,
+            "is_decoder": True,
+            "layer_norm_eps": 1e-12,
+            "max_position_embeddings": 512,
+            "model_type": "blip_text_model",
+            "num_attention_heads": 8,
+            "num_hidden_layers": 12,
+            "pad_token_id": 0,
+            "projection_dim": 768,
+            "sep_token_id": 102,
+            "transformers_version": "4.28.0.dev0",
+            "use_cache": True,
+            "vocab_size": 30524
+            }
         # self.config = config
         self.decoder_start_token_id = 30522 
         self.decoder_input_ids = 30522
@@ -84,11 +108,11 @@ class BlipEngine:
         flag = True
         for frame in pixel_values:
             if flag:
-                inputs = self.processor(frame, ' ', return_tensors='pt')
+                inputs = self.processor(frame, ' ', return_tensors='pt')['pixel_values']
                 frames_embs  = self.vision_model(inputs.detach().numpy())[self.vision_model_out]
                 flag = False
             else:
-                inputs = self.processor(frame, ' ', return_tensors='pt')
+                inputs = self.processor(frame, ' ', return_tensors='pt')['pixel_values']
                 embs = self.vision_model(inputs.detach().numpy())[self.vision_model_out]
                 frames_embs = np.concatenate((frames_embs, embs), axis=1)
 
@@ -102,8 +126,8 @@ class BlipEngine:
 
         outputs = self.text_decoder.generate(
             input_ids=torch.from_numpy(bos_ids),
-            eos_token_id=self.config.text_config.sep_token_id,
-            pad_token_id=self.config.text_config.pad_token_id,
+            eos_token_id=self.text_config['sep_token_id']
+            pad_token_id=self.text_config['pad_token_id'],
             encoder_hidden_states=torch.from_numpy(question_embeds),
             encoder_attention_mask=torch.from_numpy(question_attention_mask),
             **generate_kwargs,
@@ -120,18 +144,18 @@ class BlipEngine:
         Retruns:
           generation output (torch.Tensor): tensor which represents sequence of generated caption token ids
         """
-        batch_size = pixel_values.shape[0]
+        batch_size = 1
 
         # image_embeds = self.vision_model(pixel_values.detach().numpy())[self.vision_model_out]
         #concantenate embeddings of video frames
         flag = True
         for frame in pixel_values:
                 if flag:
-                    inputs = self.processor(frame, ' ', return_tensors='pt')
+                    inputs = self.processor(frame, ' ', return_tensors='pt')['pixel_values']
                     frames_embs  = self.vision_model(inputs.detach().numpy())[self.vision_model_out]
                     flag = False
                 else:
-                    inputs = self.processor(frame, ' ', return_tensors='pt')
+                    inputs = self.processor(frame, ' ', return_tensors='pt')['pixel_values']
                     embs = self.vision_model(inputs.detach().numpy())[self.vision_model_out]
                     frames_embs = np.concatenate((frames_embs, embs), axis=1)
 
@@ -141,16 +165,16 @@ class BlipEngine:
             input_ids = torch.LongTensor(input_ids)
         elif input_ids is None:
             input_ids = (
-                torch.LongTensor([[self.config.text_config.bos_token_id, self.config.text_config.eos_token_id]])
+                torch.LongTensor([[self.text_config['bos_token_id'], self.text_config['eos_token_id']]])
                 .repeat(batch_size, 1)
             )
-        input_ids[:, 0] = self.config.text_config.bos_token_id
+        input_ids[:, 0] = self.text_config['bos_token_id']
         attention_mask = attention_mask[:, :-1] if attention_mask is not None else None
 
         outputs = self.text_decoder.generate(
             input_ids=input_ids[:, :-1],
-            eos_token_id=self.config.text_config.sep_token_id,
-            pad_token_id=self.config.text_config.pad_token_id,
+            eos_token_id=self.text_config['sep_token_id']
+            pad_token_id=self.text_config['pad_token_id'],
             attention_mask=attention_mask,
             encoder_hidden_states=torch.from_numpy(frames_embs),
             encoder_attention_mask=image_attention_mask,
@@ -160,8 +184,8 @@ class BlipEngine:
         return outputs
 
     def caption(self, raw_image, **generate_kwargs) -> str:
-        print(f"raw image shape {raw_image.shape}")
-        out = self.generate_caption(inputs["pixel_values"], **generate_kwargs)
+        # print(f"raw image shape {raw_image.shape}")
+        out = self.generate_caption(raw_image, **generate_kwargs)
         caption = self.processor.decode(out[0], skip_special_tokens=True)
         return caption
 

@@ -10,13 +10,15 @@ module.exports = defineConfig({
   },
 
   transpileDependencies: true,
+  filenameHashing: false,
 })
 
 module.exports = {
   devServer: {
     allowedHosts: "all",
   },
-};
+  filenameHashing: false,
+}
 
 function addStyleResource(rule) {
   rule

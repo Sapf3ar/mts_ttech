@@ -45,7 +45,7 @@ export default [
     rating: "9",
   },
   {
-    title: "",
+    title: "Постучись в мою дверь",
     poster:
       "https://static.kion.ru/content/mts/series/65010000/posters/VERTICAL_08be06471febf3de96db90bbcfbabe55.webp",
     id: "08be06471febf3de96db90bbcfbabe55",

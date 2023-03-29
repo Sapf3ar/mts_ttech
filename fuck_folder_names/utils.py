@@ -412,7 +412,7 @@ def read_video(path, transform=None, frames_num=1):
         if ret and i == current_frame and len(frames) < frames_num:
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             frame = cv2.resize(frame, (384, 384), interpolation=cv2.INTER_CUBIC)
-            frame = transform(frame).unsqueeze(0).to(device)
+            # frame = transform(frame).unsqueeze(0).to(device)
             frames.append(frame)
             current_frame += N
 
@@ -431,7 +431,7 @@ def blip_scene_inf(model, folder, pipe_sum, fold_timings, translator):
             folder_text[p] = text
     return folder_text
 
-def prune_video(video:np.ndarray, frames_num:int) -> np.ndarray:/
+# def prune_video(video:np.ndarray, frames_num:int) -> np.ndarray:/
 
 # def cut_by_scenes(timecodes:List[Any], video:np.ndarray, fps:int, **prune_args)->None:
 #     for start, end in timecodes:

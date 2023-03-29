@@ -1,3 +1,5 @@
+# @title infer
+
 import torch
 import numpy as np
 import cv2
@@ -12,8 +14,7 @@ from transformers import BlipProcessor, BlipForQuestionAnswering
 import py7zr
 
 
-
-def prepare_past_inputs(past_key_values:List[Tuple[torch.Tensor, torch.Tensor]]):
+def prepare_past_inputs(past_key_values: List[Tuple[torch.Tensor, torch.Tensor]]):
     """
     Helper function for rearrange input hidden states inputs to OpenVINO model expected format
     Parameters:
@@ -27,31 +28,34 @@ def prepare_past_inputs(past_key_values:List[Tuple[torch.Tensor, torch.Tensor]])
         inputs[f"in_past_key_value.{idx}.value"] = value
     return inputs
 
+
 past_key_values_outs = ['out_past_key_value.0.key',
- 'out_past_key_value.0.value',
- 'out_past_key_value.1.key',
- 'out_past_key_value.1.value',
- 'out_past_key_value.2.key',
- 'out_past_key_value.2.value',
- 'out_past_key_value.3.key',
- 'out_past_key_value.3.value',
- 'out_past_key_value.4.key',
- 'out_past_key_value.4.value',
- 'out_past_key_value.5.key',
- 'out_past_key_value.5.value',
- 'out_past_key_value.6.key',
- 'out_past_key_value.6.value',
- 'out_past_key_value.7.key',
- 'out_past_key_value.7.value',
- 'out_past_key_value.8.key',
- 'out_past_key_value.8.value',
- 'out_past_key_value.9.key',
- 'out_past_key_value.9.value',
- 'out_past_key_value.10.key',
- 'out_past_key_value.10.value',
- 'out_past_key_value.11.key',
- 'out_past_key_value.11.value']
-def postprocess_text_decoder_outputs(output:Dict):
+                        'out_past_key_value.0.value',
+                        'out_past_key_value.1.key',
+                        'out_past_key_value.1.value',
+                        'out_past_key_value.2.key',
+                        'out_past_key_value.2.value',
+                        'out_past_key_value.3.key',
+                        'out_past_key_value.3.value',
+                        'out_past_key_value.4.key',
+                        'out_past_key_value.4.value',
+                        'out_past_key_value.5.key',
+                        'out_past_key_value.5.value',
+                        'out_past_key_value.6.key',
+                        'out_past_key_value.6.value',
+                        'out_past_key_value.7.key',
+                        'out_past_key_value.7.value',
+                        'out_past_key_value.8.key',
+                        'out_past_key_value.8.value',
+                        'out_past_key_value.9.key',
+                        'out_past_key_value.9.value',
+                        'out_past_key_value.10.key',
+                        'out_past_key_value.10.value',
+                        'out_past_key_value.11.key',
+                        'out_past_key_value.11.value']
+
+
+def postprocess_text_decoder_outputs(output: Dict):
     global past_key_values_outs
     """
     Helper function for rearranging model outputs and wrapping to CausalLMOutputWithCrossAttentions
@@ -77,28 +81,25 @@ def postprocess_text_decoder_outputs(output:Dict):
     )
 
 
-
-
 class BlipEngine:
     """
     Model class for inference BLIP model with OpenVINO
     """
-    def __init__(self, main_path:str):
+
+    def __init__(self, main_path: str):
         """
         Initialization class parameters
-
         """
-        
+
         print('Initialiazing model...')
         self.text_decoder = BlipForQuestionAnswering.from_pretrained("Salesforce/blip-vqa-base").text_decoder
         self.load_models(main_path=main_path)
-        
+
         self.vision_model_out = self.vision_model.output(0)
-        
 
         self.text_encoder_out = self.text_encoder.output(0)
         self.sep_token_id = 102
-        self.text_config  = {
+        self.text_config = {
             "attention_probs_dropout_prob": 0.0,
             "bos_token_id": 30522,
             "encoder_hidden_size": 768,
@@ -121,14 +122,15 @@ class BlipEngine:
             "transformers_version": "4.28.0.dev0",
             "use_cache": True,
             "vocab_size": 30524
-            }
+        }
         # self.config = config
 
-        self.decoder_start_token_id = 30522 
+        self.decoder_start_token_id = 30522
         self.decoder_input_ids = 30522
 
-
-    def text_decoder_forward(self, input_ids:torch.Tensor, attention_mask:torch.Tensor, past_key_values:List[Tuple[torch.Tensor, torch.Tensor]], encoder_hidden_states:torch.Tensor, encoder_attention_mask:torch.Tensor, **kwargs):
+    def text_decoder_forward(self, input_ids: torch.Tensor, attention_mask: torch.Tensor,
+                             past_key_values: List[Tuple[torch.Tensor, torch.Tensor]],
+                             encoder_hidden_states: torch.Tensor, encoder_attention_mask: torch.Tensor, **kwargs):
         """
         Inference function for text_decoder in one generation step
         Parameters:
@@ -152,22 +154,22 @@ class BlipEngine:
             input_dict.update(prepare_past_inputs(past_key_values))
             outputs = self.text_decoder_with_past(input_dict)
         return postprocess_text_decoder_outputs(outputs)
-    
-    def get_weights(self, path:str) -> str:
+
+    def get_weights(self, path: str) -> str:
         if "7z" in path:
             if os.path.exists(path.split('.')[0]) and os.path.isdir(path.split('.')[0]):
                 return path.split('.')[0]
-            
+
             with py7zr.SevenZipFile(path, 'r') as archive:
                 print(f"Extracting archive to {path.split('.')[0]}")
                 archive.extractall(path=".")
             return path.split('.')[0]
         return path
-    
-    def load_models(self, main_path:str) -> Dict[str, Any]:
+
+    def load_models(self, main_path: str) -> Dict[str, Any]:
         main_path = self.get_weights(main_path)
         self.processor = BlipProcessor.from_pretrained(os.path.join(main_path, 'config'))
-        ie = Core() #create inference engine
+        ie = Core()  # create inference engine
         paths = [
             'blip_text_encoder.onnx',
             'blip_text_decoder.onnx',
@@ -178,10 +180,10 @@ class BlipEngine:
         encoder_engine = ie.compile_model(model=model_onnx, device_name="CPU")
         print("Encoder loaded...")
         model_onnx = ie.read_model(model=os.path.join(main_path, paths[1]))
-        decoder_engine = ie.compile_model(model=model_onnx,  device_name="CPU")
+        decoder_engine = ie.compile_model(model=model_onnx, device_name="CPU")
         print("Decoder loaded...")
         model_onnx = ie.read_model(model=os.path.join(main_path, paths[2]))
-        decoder_qa_engine = ie.compile_model(model=model_onnx = ie.read_model(model=os.path.join(main_path, paths[0])), device_name="GPU")
+        decoder_qa_engine = ie.compile_model(model=model_onnx, device_name="CPU")
 
         model_onnx = ie.read_model(model=os.path.join(main_path, paths[3]))
         visual_engine = ie.compile_model(model=model_onnx, device_name="CPU")
@@ -193,8 +195,7 @@ class BlipEngine:
         self.text_decoder_with_past = decoder_qa_engine
         self.text_decoder.forward = self.text_decoder_forward
 
-    
-    def generate_answer(self, pixel_values:List[torch.Tensor], question:str, **generate_kwargs):
+    def generate_answer(self, pixel_values: List[torch.Tensor], question: str, **generate_kwargs):
         """
         Visual Question Answering prediction
         Parameters:
@@ -207,29 +208,31 @@ class BlipEngine:
         # image_embed = self.vision_model(pixel_values.detach().numpy())[self.vision_model_out]
         flag = True
         for frame in pixel_values:
-                if flag:
-                    inputs = self.processor(frame, question, return_tensors='pt')
-                    input_ids = input_ids['input_ids']
-                    attention_mask = inputs['attention_mask']
-                    inputs = inputs['pixel_values']
-                    frames_embs  = self.vision_model(inputs.detach().numpy())[self.vision_model_out]
-                    flag = False
-                else:
-                    inputs = self.processor(frame, question, return_tensors='pt')['pixel_values']
-                    embs = self.vision_model(inputs.detach().numpy())[self.vision_model_out]
-                    frames_embs = np.concatenate((frames_embs, embs), axis=1)
+            if flag:
+                inputs = self.processor(frame, question, return_tensors='pt')
+                input_ids = inputs['input_ids']
+                attention_mask = inputs['attention_mask']
+                inputs = inputs['pixel_values']
+                frames_embs = self.vision_model(inputs.detach().numpy())[self.vision_model_out]
+                flag = False
+            else:
+                inputs = self.processor(frame, question, return_tensors='pt')['pixel_values']
+                embs = self.vision_model(inputs.detach().numpy())[self.vision_model_out]
+                frames_embs = np.concatenate((frames_embs, embs), axis=1)
 
         image_attention_mask = np.ones(frames_embs.shape[:-1], dtype=int)
         if isinstance(input_ids, list):
             input_ids = torch.LongTensor(input_ids)
-        question_embeds = self.text_encoder([input_ids.detach().numpy(), attention_mask.detach().numpy(), frames_embs, image_attention_mask])[self.text_encoder_out]
+        question_embeds = self.text_encoder(
+            [input_ids.detach().numpy(), attention_mask.detach().numpy(), frames_embs, image_attention_mask])[
+            self.text_encoder_out]
         question_attention_mask = np.ones(question_embeds.shape[:-1], dtype=int)
 
         bos_ids = np.full((question_embeds.shape[0], 1), fill_value=self.decoder_start_token_id)
 
         outputs = self.text_decoder.generate(
             input_ids=torch.from_numpy(bos_ids),
-            eos_token_id=self.text_config['sep_token_id']
+            eos_token_id=self.text_config['sep_token_id'],
             pad_token_id=self.text_config['pad_token_id'],
             encoder_hidden_states=torch.from_numpy(question_embeds),
             encoder_attention_mask=torch.from_numpy(question_attention_mask),
@@ -237,7 +240,8 @@ class BlipEngine:
         )
         return outputs
 
-    def generate_caption(self, pixel_values:List[torch.Tensor], input_ids:torch.Tensor = None, attention_mask:torch.Tensor = None, **generate_kwargs):
+    def generate_caption(self, pixel_values: List[torch.Tensor], input_ids: torch.Tensor = None,
+                         attention_mask: torch.Tensor = None, **generate_kwargs):
         """
         Image Captioning prediction
         Parameters:
@@ -250,17 +254,17 @@ class BlipEngine:
         batch_size = 1
 
         # image_embeds = self.vision_model(pixel_values.detach().numpy())[self.vision_model_out]
-        #concantenate embeddings of video frames
+        # concantenate embeddings of video frames
         flag = True
         for frame in pixel_values:
-                if flag:
-                    inputs = self.processor(frame, ' ', return_tensors='pt')['pixel_values']
-                    frames_embs  = self.vision_model(inputs.detach().numpy())[self.vision_model_out]
-                    flag = False
-                else:
-                    inputs = self.processor(frame, ' ', return_tensors='pt')['pixel_values']
-                    embs = self.vision_model(inputs.detach().numpy())[self.vision_model_out]
-                    frames_embs = np.concatenate((frames_embs, embs), axis=1)
+            if flag:
+                inputs = self.processor(frame, ' ', return_tensors='pt')['pixel_values']
+                frames_embs = self.vision_model(inputs.detach().numpy())[self.vision_model_out]
+                flag = False
+            else:
+                inputs = self.processor(frame, ' ', return_tensors='pt')['pixel_values']
+                embs = self.vision_model(inputs.detach().numpy())[self.vision_model_out]
+                frames_embs = np.concatenate((frames_embs, embs), axis=1)
 
         image_attention_mask = torch.ones(frames_embs.shape[:-1], dtype=torch.long)
 
@@ -276,7 +280,7 @@ class BlipEngine:
 
         outputs = self.text_decoder.generate(
             input_ids=input_ids[:, :-1],
-            eos_token_id=self.text_config['sep_token_id']
+            eos_token_id=self.text_config['sep_token_id'],
             pad_token_id=self.text_config['pad_token_id'],
             attention_mask=attention_mask,
             encoder_hidden_states=torch.from_numpy(frames_embs),
@@ -292,9 +296,9 @@ class BlipEngine:
         caption = self.processor.decode(out[0], skip_special_tokens=True)
         return caption
 
-    def answer(self,raw_image, question, **generate_kwargs)->str:
-        
-        out = self.generate_answer(raw_image,question, **generate_kwargs)
+    def answer(self, raw_image, question, **generate_kwargs) -> str:
+
+        out = self.generate_answer(raw_image, question, **generate_kwargs)
         caption = self.processor.decode(out[0], skip_special_tokens=True)
         return caption
 

@@ -29,7 +29,6 @@ class BlipEngine:
         # self.config = config
         self.decoder_start_token_id = 30522 
         self.decoder_input_ids = 30522
-        self.processor = BlipProcessor.from_pretrained(os.path.join(main_path, 'config'))
 
     def get_weights(self, path:str) -> str:
         if "7z" in path:
@@ -44,7 +43,7 @@ class BlipEngine:
     
     def load_models(self, main_path:str) -> Dict[str, Any]:
         main_path = self.get_weights(main_path)
-
+        self.processor = BlipProcessor.from_pretrained(os.path.join(main_path, 'config'))
         ie = Core() #create inference engine
         paths = [
             'blip_text_encoder.onnx',

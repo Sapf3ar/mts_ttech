@@ -1,0 +1,66 @@
+.vi-container {
+  font-weight: bold !important;
+  font-size: 24px !important;
+  color: black !important;
+  min-height: 120px;
+  // Перебить бс стили, чтобы верхняя плашка на изменения не прыгала
+  &.row > * {
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+  }
+  .row > * {
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+  }
+  .px-1 {
+    padding-left: 6px !important;
+    padding-right: 6px !important;
+  }
+  .px-2 {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+  .mx-1 {
+    margin-left: 6px !important;
+    margin-right: 6px !important;
+  }
+  .mx-2 {
+    margin-left: 12px !important;
+    margin-right: 12px !important;
+  }
+  .ps-1 {
+    padding-left: 6px !important;
+  }
+  .pe-1 {
+    padding-right: 6px !important;
+  }
+  .me-1 {
+    margin-right: 6px !important;
+  }
+  .ms-1 {
+    margin-left: 6px !important;
+  }
+}
+
+.letter-font-big {
+  font-size: 32px !important;
+}
+.letter-font-large {
+  font-size: 36px !important;
+}
+.bg-changer-container {
+  font-size: 32px !important;
+}
+.bg-changer-title {
+  font-size: 24px !important;
+}
+.letter-bg-black {
+  color: white;
+  background-color: black;
+  font-size: inherit !important;
+}
+.letter-bg-dark {
+  color: white;
+  font-size: inherit !important;
+  background-color: #041423;
+}

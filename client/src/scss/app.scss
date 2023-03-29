@@ -1,0 +1,79 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600;700;800;900");
+@import url("https://fonts.fontstorage.com/import/ptserif.css");
+@import "./_variables.scss";
+@import "swiper/css";
+@import "swiper/css/navigation";
+
+:root {
+  --tt-fz-multiplier: 1;
+  --tt-body-bg: #041423;
+  --tt-fw: 400;
+  --tt-ffamily: "Montserrat";
+  --tt-letter-spacing: 0;
+
+  --bs-body-bg: var(--tt-body-bg);
+  --bs-body-font-family: var(--tt-ffamily), sans-serif;
+  --bs-body-font-weight: var(--tt-fw);
+
+  --bs-danger: #e30613;
+  --bs-danger-border-subtle: #9d2015;
+  --bs-secondary: #a5a5a5;
+
+  --swiper-navigation-size: calc(20px * var(--tt-fz-multiplier));
+  --swiper-theme-color: #fff;
+}
+
+html {
+  font-size: calc(16px * var(--tt-fz-multiplier));
+}
+body {
+  letter-spacing: var(--tt-letter-spacing);
+}
+.btn-secondary {
+  --bs-btn-bg: var(--bs-secondary);
+}
+.btn-danger {
+  --bs-btn-bg: var(--bs-danger);
+}
+.btn {
+  --bs-btn-border-radius: 30px;
+}
+.btn:focus-visible {
+  outline: 1px solid;
+}
+
+.swiper-wrapper {
+  .btn:focus-visible {
+    outline: 4px solid;
+  }
+  .btn:active {
+    outline: none;
+    border: none;
+  }
+}
+
+.swiper-button-next::after {
+  font-weight: 900;
+}
+.swiper-button-prev::after {
+  font-weight: 900;
+}
+
+@media (min-width: 992px) {
+  .swiper-button-next {
+    right: -20px !important;
+  }
+  .swiper-button-prev {
+    left: -20px !important;
+  }
+}
+
+@media (min-width: 1200px) {
+  .swiper-button-next {
+    right: -40px !important;
+  }
+
+  .swiper-button-prev {
+    left: -40px !important;
+  }
+}

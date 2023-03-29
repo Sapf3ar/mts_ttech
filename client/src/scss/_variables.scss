@@ -1,0 +1,29 @@
+@import "~bootstrap/scss/functions";
+@import "~bootstrap/scss/variables";
+
+$new-container-max-widths: (
+  sm: 540px,
+  md: 720px,
+  lg: 960px,
+  xl: 1100px,
+  xxl: 1100px,
+);
+
+$container-max-widths: map-merge(
+  $container-max-widths,
+  $new-container-max-widths
+);
+
+$modal-sm: 100%;
+$modal-md: 100%;
+$modal-lg: 90%;
+$modal-xl: 1140px;
+
+$modal-fade-transform: translate(0, 350px);
+$modal-show-transform: none;
+$modal-transition: transform 0.3s ease-out;
+$modal-scale-transform: scale(3);
+$modal-content-border-width: 0;
+$modal-content-border-radius: 30px;
+
+@import "~bootstrap/scss/bootstrap";

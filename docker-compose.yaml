@@ -1,0 +1,35 @@
+version: '3'
+services:
+  mongodb:
+    image: mongo
+    volumes:
+      - ./mongo_storage:/mongo_storage
+    command: mongod --port 6035 --dbpath /mongo_storage
+    network_mode: host
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    volumes:
+      - ./server:/app/server
+      - ./client:/app/client
+    environment:
+      - HOST=localhost:6035
+      - DBNAME=db
+    command: python server/__main__.py
+    network_mode: host
+    depends_on:
+      - mongodb
+
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    working_dir: /client
+    volumes:
+      - ./static:/app/static
+    command: npm run serve -- --port 7000
+    network_mode: host
+    depends_on:
+      - server

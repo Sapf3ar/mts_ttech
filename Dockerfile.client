@@ -1,0 +1,11 @@
+FROM node:18
+
+COPY client client
+
+WORKDIR /client
+
+RUN npm install
+
+RUN npm run build
+
+COPY static static

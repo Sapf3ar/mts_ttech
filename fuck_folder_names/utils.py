@@ -431,7 +431,7 @@ def blip_scene_inf(model, folder, pipe_sum, fold_timings, translator):
             folder_text[p] = text
     return folder_text
 
-def prune_video(video:np.ndarray, frames_num:int) -> np.ndarray:
+def prune_video(video:np.ndarray, frames_num:int) -> np.ndarray:/
 
 # def cut_by_scenes(timecodes:List[Any], video:np.ndarray, fps:int, **prune_args)->None:
 #     for start, end in timecodes:

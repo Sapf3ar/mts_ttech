@@ -69,7 +69,7 @@ class BlipEngine:
         self.text_decoder = decoder_engine
 
     
-    def generate_answer(self, pixel_values:torch.Tensor, input_ids:torch.Tensor, attention_mask:torch.Tensor, **generate_kwargs):
+    def generate_answer(self, pixel_values:List[torch.Tensor], input_ids:torch.Tensor, attention_mask:torch.Tensor, **generate_kwargs):
         """
         Visual Question Answering prediction
         Parameters:
@@ -83,13 +83,14 @@ class BlipEngine:
 
         flag = True
         for frame in pixel_values:
-                if flag:
-                
-                    frames_embs  = self.vision_model(frame.detach().numpy())[self.vision_model_out]
-                    flag = False
-                else:
-                    embs = self.vision_model(frame.detach().numpy())[self.vision_model_out]
-                    frames_embs = np.concatenate((frames_embs, embs), axis=1)
+            if flag:
+                inputs = self.processor(frame, ' ', return_tensors='pt')
+                frames_embs  = self.vision_model(inputs.detach().numpy())[self.vision_model_out]
+                flag = False
+            else:
+                inputs = self.processor(frame, ' ', return_tensors='pt')
+                embs = self.vision_model(inputs.detach().numpy())[self.vision_model_out]
+                frames_embs = np.concatenate((frames_embs, embs), axis=1)
 
         image_attention_mask = np.ones(frames_embs.shape[:-1], dtype=int)
         if isinstance(input_ids, list):
@@ -126,11 +127,12 @@ class BlipEngine:
         flag = True
         for frame in pixel_values:
                 if flag:
-                
-                    frames_embs  = self.vision_model(frame.detach().numpy())[self.vision_model_out]
+                    inputs = self.processor(frame, ' ', return_tensors='pt')
+                    frames_embs  = self.vision_model(inputs.detach().numpy())[self.vision_model_out]
                     flag = False
                 else:
-                    embs = self.vision_model(frame.detach().numpy())[self.vision_model_out]
+                    inputs = self.processor(frame, ' ', return_tensors='pt')
+                    embs = self.vision_model(inputs.detach().numpy())[self.vision_model_out]
                     frames_embs = np.concatenate((frames_embs, embs), axis=1)
 
         image_attention_mask = torch.ones(frames_embs.shape[:-1], dtype=torch.long)
@@ -159,7 +161,6 @@ class BlipEngine:
 
     def caption(self, raw_image, **generate_kwargs) -> str:
         print(f"raw image shape {raw_image.shape}")
-        inputs = self.processor(raw_image, ' ', return_tensors='pt')
         out = self.generate_caption(inputs["pixel_values"], **generate_kwargs)
         caption = self.processor.decode(out[0], skip_special_tokens=True)
         return caption

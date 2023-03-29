@@ -194,7 +194,7 @@ class BlipEngine:
         self.text_decoder.forward = self.text_decoder_forward
 
     
-    def generate_answer(self, pixel_values:List[torch.Tensor], input_ids:torch.Tensor, attention_mask:torch.Tensor, **generate_kwargs):
+    def generate_answer(self, pixel_values:List[torch.Tensor], question:str, **generate_kwargs):
         """
         Visual Question Answering prediction
         Parameters:
@@ -208,11 +208,14 @@ class BlipEngine:
         flag = True
         for frame in pixel_values:
                 if flag:
-                    inputs = self.processor(frame, ' ', return_tensors='pt')['pixel_values']
+                    inputs = self.processor(frame, question, return_tensors='pt')
+                    input_ids = input_ids['input_ids']
+                    attention_mask = inputs['attention_mask']
+                    inputs = inputs['pixel_values']
                     frames_embs  = self.vision_model(inputs.detach().numpy())[self.vision_model_out]
                     flag = False
                 else:
-                    inputs = self.processor(frame, ' ', return_tensors='pt')['pixel_values']
+                    inputs = self.processor(frame, question, return_tensors='pt')['pixel_values']
                     embs = self.vision_model(inputs.detach().numpy())[self.vision_model_out]
                     frames_embs = np.concatenate((frames_embs, embs), axis=1)
 
@@ -290,8 +293,8 @@ class BlipEngine:
         return caption
 
     def answer(self,raw_image, question, **generate_kwargs)->str:
-        inputs = self.processor(raw_image, question, return_tensors='pt')
-        out = self.generate_answer(**inputs, **generate_kwargs)
+        
+        out = self.generate_answer(raw_image,question, **generate_kwargs)
         return out
 
  

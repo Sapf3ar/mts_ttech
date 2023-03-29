@@ -383,9 +383,9 @@ def question_set_inf(model, frames):
 
     ]
     texts = []
-    texts.append(model.caption(frames, min_len=15, max_len=200))
+    texts.append(model.caption(frames, min_length=15, max_length=200))
     for q in questions:
-        texts.append(model.answer(frames, q, min_len=10, max_len=200))
+        texts.append(model.answer(frames, q, min_length=10, max_length=200))
     return texts
 
 

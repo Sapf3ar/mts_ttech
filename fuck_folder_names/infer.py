@@ -8,8 +8,7 @@ from typing import List, Tuple, Dict
 from transformers.modeling_outputs import CausalLMOutputWithCrossAttentions
 from transformers import BlipProcessor
 
-from pyunpack import Archive
-
+import py7zr
 
 class BlipEngine:
     """
@@ -30,8 +29,18 @@ class BlipEngine:
         self.decoder_input_ids = 30522
         self.processor = BlipProcessor.from_pretrained(os.path.join(main_path, 'config'))
 
+    def get_weights(self, path:str) -> str:
+        if "7z" in path:
+            if os.path.exists(path.split('.')[0]) and os.path.isdir(path.split('.')[0]):
+                return path.split('.')[0]
+            
+            with py7zr.SevenZipFile(path, 'r') as archive:
+                archive.extractall(path=".")
+            return path.split('.')[0]
+        return path
+    
     def load_models(self, main_path:str) -> Dict[str, Any]:
-        Archive(main_path).extractall("")
+        main_path = self.get_weights(main_path)
 
         ie = Core() #create inference engine
         paths = [

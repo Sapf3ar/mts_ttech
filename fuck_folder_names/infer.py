@@ -205,17 +205,16 @@ class BlipEngine:
           generation output (torch.Tensor): tensor which represents sequence of generated answer token ids
         """
         # image_embed = self.vision_model(pixel_values.detach().numpy())[self.vision_model_out]
-
         flag = True
         for frame in pixel_values:
-            if flag:
-                inputs = self.processor(frame, ' ', return_tensors='pt')['pixel_values']
-                frames_embs  = self.vision_model(inputs.detach().numpy())[self.vision_model_out]
-                flag = False
-            else:
-                inputs = self.processor(frame, ' ', return_tensors='pt')['pixel_values']
-                embs = self.vision_model(inputs.detach().numpy())[self.vision_model_out]
-                frames_embs = np.concatenate((frames_embs, embs), axis=1)
+                if flag:
+                    inputs = self.processor(frame, ' ', return_tensors='pt')['pixel_values']
+                    frames_embs  = self.vision_model(inputs.detach().numpy())[self.vision_model_out]
+                    flag = False
+                else:
+                    inputs = self.processor(frame, ' ', return_tensors='pt')['pixel_values']
+                    embs = self.vision_model(inputs.detach().numpy())[self.vision_model_out]
+                    frames_embs = np.concatenate((frames_embs, embs), axis=1)
 
         image_attention_mask = np.ones(frames_embs.shape[:-1], dtype=int)
         if isinstance(input_ids, list):
@@ -279,7 +278,7 @@ class BlipEngine:
             attention_mask=attention_mask,
             encoder_hidden_states=torch.from_numpy(frames_embs),
             encoder_attention_mask=image_attention_mask,
-            **generate_kwargs,
+            **generate_kwargs
         )
 
         return outputs

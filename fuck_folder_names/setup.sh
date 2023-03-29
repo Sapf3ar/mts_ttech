@@ -4,8 +4,7 @@
 !pip install num2words -q
 !pip install git+https://github.com/huggingface/transformers
 !pip install sentencepiece -q
-!pip install pyunpack
-!pip install patool
+!pip install py7zr
 !pip install scenedetect[opencv] --upgrade
 
 !pip install openvino-dev[torch, onnx]

@@ -8,14 +8,14 @@ from typing import List, Tuple, Dict
 from transformers.modeling_outputs import CausalLMOutputWithCrossAttentions
 from transformers import BlipProcessor
 
-
+from pyunpack import Archive
 
 
 class BlipEngine:
     """
     Model class for inference BLIP model with OpenVINO
     """
-    def __init__(self, config, decoder_start_token_id:int, main_path:str):
+    def __init__(self, config:int, main_path:str):
         """
         Initialization class parameters
         """
@@ -25,13 +25,14 @@ class BlipEngine:
         
         self.text_encoder_out = self.text_encoder.output(0)
         
-        self.config = config
-        self.decoder_start_token_id = decoder_start_token_id
-        self.decoder_input_ids = config.text_config.bos_token_id
-        self.processor = BlipProcessor.from_pretrained("Salesforce/blip-vqa-base")
+        # self.config = config
+        self.decoder_start_token_id = 30522 
+        self.decoder_input_ids = 30522
+        self.processor = BlipProcessor.from_pretrained(os.path.join(main_path, 'config'))
 
     def load_models(self, main_path:str) -> Dict[str, Any]:
-        
+        Archive(main_path).extractall("")
+
         ie = Core() #create inference engine
         paths = [
             'blip_text_encoder.onnx',

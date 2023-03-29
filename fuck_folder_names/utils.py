@@ -330,10 +330,10 @@ def global_scene_cut(path_to_cut_videos:str):
     for file_path in glob.glob(os.path.join(path_to_cut_videos, '*.mp4')):
         make_dir(file_path[:-4])
         os.chdir(file_path[:-4])
-        split_video_into_scenes(file_path)
+        timecodes = split_video_into_scenes(file_path)
         os.chidr("..")
         video_folders.append(file_path[:-4])
-    return video_folders
+    return timecodes, video_folders
 
 def question_set_inf(model, frames):
     questions = [
@@ -400,15 +400,8 @@ def read_video(path, transform=None, frames_num=1):
     return frames
 
 
-def prune_video(video:np.ndarray, frames_num:int) -> np.ndarray:
 
-# def cut_by_scenes(timecodes:List[Any], video:np.ndarray, fps:int, **prune_args)->None:
-#     for start, end in timecodes:
-#         if int(end) - int(start) < 4:
-#             pass
-#         else:
-#             frame_pos_start = fps*int(start)
-#             frame_pos_end = fps*int(end)
+
             
 
    

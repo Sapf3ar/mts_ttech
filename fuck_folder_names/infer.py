@@ -6,9 +6,78 @@ from openvino.runtime import Core
 import os
 from typing import List, Tuple, Dict
 from transformers.modeling_outputs import CausalLMOutputWithCrossAttentions
-from transformers import BlipProcessor
+
+from transformers import BlipProcessor, BlipForQuestionAnswering
 
 import py7zr
+
+
+
+def prepare_past_inputs(past_key_values:List[Tuple[torch.Tensor, torch.Tensor]]):
+    """
+    Helper function for rearrange input hidden states inputs to OpenVINO model expected format
+    Parameters:
+      past_key_values (List[Tuple[torch.Tensor, torch.Tensor]]): list of pairs key, value attention hidden states obtained as model outputs from previous step
+    Returns:
+      inputs (Dict[str, torch.Tensor]): dictionary with inputs for model
+    """
+    inputs = {}
+    for idx, (key, value) in enumerate(past_key_values):
+        inputs[f"in_past_key_value.{idx}.key"] = key
+        inputs[f"in_past_key_value.{idx}.value"] = value
+    return inputs
+
+past_key_values_outs = ['out_past_key_value.0.key',
+ 'out_past_key_value.0.value',
+ 'out_past_key_value.1.key',
+ 'out_past_key_value.1.value',
+ 'out_past_key_value.2.key',
+ 'out_past_key_value.2.value',
+ 'out_past_key_value.3.key',
+ 'out_past_key_value.3.value',
+ 'out_past_key_value.4.key',
+ 'out_past_key_value.4.value',
+ 'out_past_key_value.5.key',
+ 'out_past_key_value.5.value',
+ 'out_past_key_value.6.key',
+ 'out_past_key_value.6.value',
+ 'out_past_key_value.7.key',
+ 'out_past_key_value.7.value',
+ 'out_past_key_value.8.key',
+ 'out_past_key_value.8.value',
+ 'out_past_key_value.9.key',
+ 'out_past_key_value.9.value',
+ 'out_past_key_value.10.key',
+ 'out_past_key_value.10.value',
+ 'out_past_key_value.11.key',
+ 'out_past_key_value.11.value']
+def postprocess_text_decoder_outputs(output:Dict):
+    global past_key_values_outs
+    """
+    Helper function for rearranging model outputs and wrapping to CausalLMOutputWithCrossAttentions
+    Parameters:
+      output (Dict): dictionary with model output
+    Returns
+      wrapped_outputs (CausalLMOutputWithCrossAttentions): outputs wrapped to CausalLMOutputWithCrossAttentions format
+    """
+    outs = {k.any_name: v for k, v in output.items()}
+    logits = torch.from_numpy(outs["logits"])
+    past_kv = []
+    for i in range(0, len(past_key_values_outs), 2):
+        key = past_key_values_outs[i]
+        value = key.replace(".key", ".value")
+        past_kv.append((torch.from_numpy(outs[key]), torch.from_numpy(outs[value])))
+    return CausalLMOutputWithCrossAttentions(
+        loss=None,
+        logits=logits,
+        past_key_values=past_kv,
+        hidden_states=None,
+        attentions=None,
+        cross_attentions=None
+    )
+
+
+
 
 class BlipEngine:
     """
@@ -23,7 +92,8 @@ class BlipEngine:
         self.load_models(main_path=main_path)
         
         self.vision_model_out = self.vision_model.output(0)
-        
+        self.text_decoder = BlipForQuestionAnswering.from_pretrained("Salesforce/blip-vqa-base").text_decoder
+
         self.text_encoder_out = self.text_encoder.output(0)
         self.sep_token_id = 102
         self.text_config  = {
@@ -51,9 +121,36 @@ class BlipEngine:
             "vocab_size": 30524
             }
         # self.config = config
+
         self.decoder_start_token_id = 30522 
         self.decoder_input_ids = 30522
 
+
+    def text_decoder_forward(self, input_ids:torch.Tensor, attention_mask:torch.Tensor, past_key_values:List[Tuple[torch.Tensor, torch.Tensor]], encoder_hidden_states:torch.Tensor, encoder_attention_mask:torch.Tensor, **kwargs):
+        """
+        Inference function for text_decoder in one generation step
+        Parameters:
+        input_ids (torch.Tensor): input token ids
+        attention_mask (torch.Tensor): attention mask for input token ids
+        past_key_values (List[Tuple[torch.Tensor, torch.Tensor]]): list of cached decoder hidden states from previous step
+        encoder_hidden_states (torch.Tensor): encoder (vision or text) hidden states
+        encoder_attention_mask (torch.Tensor): attnetion mask for encoder hidden states
+        Returns
+        model outputs (CausalLMOutputWithCrossAttentions): model prediction wrapped to CausalLMOutputWithCrossAttentions class including predicted logits and hidden states for caching
+        """
+        input_dict = {
+            "input_ids": input_ids,
+            "attention_mask": attention_mask,
+            "encoder_hidden_states": encoder_hidden_states,
+            "encoder_attention_mask": encoder_attention_mask
+        }
+        if past_key_values is None:
+            outputs = self.text_decoder_ov(input_dict)
+        else:
+            input_dict.update(prepare_past_inputs(past_key_values))
+            outputs = self.text_decoder_with_past(input_dict)
+        return postprocess_text_decoder_outputs(outputs)
+    
     def get_weights(self, path:str) -> str:
         if "7z" in path:
             if os.path.exists(path.split('.')[0]) and os.path.isdir(path.split('.')[0]):
@@ -81,8 +178,8 @@ class BlipEngine:
         model_onnx = ie.read_model(model=os.path.join(main_path, paths[1]))
         decoder_engine = ie.compile_model(model=model_onnx,  device_name="CPU")
         print("Decoder loaded...")
-        # model_onnx = ie.read_model(model=os.path.join(main_path, paths[2]))
-        # decoder_qa_engine = ie.compile_model(model=model_onnx = ie.read_model(model=os.path.join(main_path, paths[0])), device_name="GPU")
+        model_onnx = ie.read_model(model=os.path.join(main_path, paths[2]))
+        decoder_qa_engine = ie.compile_model(model=model_onnx = ie.read_model(model=os.path.join(main_path, paths[0])), device_name="GPU")
 
         model_onnx = ie.read_model(model=os.path.join(main_path, paths[3]))
         visual_engine = ie.compile_model(model=model_onnx, device_name="CPU")
@@ -90,7 +187,9 @@ class BlipEngine:
         print("All model loaded..")
         self.vision_model = visual_engine
         self.text_encoder = encoder_engine
-        self.text_decoder = decoder_engine
+        self.text_decoder_ov = decoder_engine
+        self.text_decoder_with_past = decoder_qa_engine
+        self.text_decoder.forward = self.text_decoder_forward
 
     
     def generate_answer(self, pixel_values:List[torch.Tensor], input_ids:torch.Tensor, attention_mask:torch.Tensor, **generate_kwargs):

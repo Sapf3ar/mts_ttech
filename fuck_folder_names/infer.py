@@ -54,15 +54,16 @@ class BlipEngine:
         ]
         model_onnx = ie.read_model(model=os.path.join(main_path, paths[0]))
         encoder_engine = ie.compile_model(model=model_onnx, device_name="GPU")
-
+        print("Encoder loaded...")
         model_onnx = ie.read_model(model=os.path.join(main_path, paths[1]))
-        decoder_engine = ie.compile_model(model=model_onnx, device_name="GPU")
-
+        decoder_engine = ie.compile_model(model=model_onnx,  device_name="GPU")
+        print("Decoder loaded...")
         # model_onnx = ie.read_model(model=os.path.join(main_path, paths[2]))
         # decoder_qa_engine = ie.compile_model(model=model_onnx = ie.read_model(model=os.path.join(main_path, paths[0])), device_name="GPU")
 
         model_onnx = ie.read_model(model=os.path.join(main_path, paths[3]))
         visual_engine = ie.compile_model(model=model_onnx, device_name="GPU")
+        print("Visual model loaded..")
         print("All model loaded..")
         self.vision_model = visual_engine
         self.text_encoder = encoder_engine

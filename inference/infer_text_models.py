@@ -82,78 +82,49 @@ class Text2Audio:
 
         for i, folder in enumerate(texts):
 
-        for folder in texts:
-            e2 = folder.split('/')[-1].split('_')[-1]
-            e1 = folder.split('/')[-1].split('_')[-2]
-            s2 = folder.split('/')[-1].split('_')[-3]
-            s1 = folder.split('/')[-1].split('_')[-4]
+            for folder in texts:
+                e2 = folder.split('/')[-1].split('_')[-1]
+                e1 = folder.split('/')[-1].split('_')[-2]
+                s2 = folder.split('/')[-1].split('_')[-3]
+                s1 = folder.split('/')[-1].split('_')[-4]
 
-            start = float(s1 + "." + s2) - 0.5
-            end = float(e1 + "." + e2)
-            scene_timcodes = self.get_timings_for_audio(local_timings[i])
-            for i, id in enumerate(texts[folder]):
-                text = texts[folder][id][1]
-                # print(start)
-                # print(scene_timcodes[i])
-                start += scene_timcodes[i][0]
-                # print(start)
-                s1 = str(start).split('.')[0]
-                s2 = str(start).split('.')[1]
-                # print('-'*80)
+                start = float(s1 + "." + s2)
+                end = float(e1 + "." + e2)
+                scene_timcodes = self.get_timings_for_audio(local_timings[i])
+                for i, id in enumerate(texts[folder]):
+                    text = texts[folder][id][1]
 
-                try:
-                    text = self.num_to_words(text)
-                    # texts[i] = self.to_ssml(texts[i])
-                    if ssml:
-                        audio = self.audio_model.apply_tts(ssml_text=text,
-                                                           speaker=speaker,
-                                                           sample_rate=sample_rate,
-                                                           put_accent=put_accent,
-                                                           put_yo=put_yo)
-                    else:
-                        audio = self.audio_model.apply_tts(text=text,
-                                                           speaker=speaker,
-                                                           sample_rate=sample_rate,
-                                                           put_accent=put_accent,
-                                                           put_yo=put_yo)
+                    start += scene_timcodes[i][0]
 
-                    if save:
-                        torchaudio.save(filepath=os.path.join(output_path, f'audio_{s1}_{s2}.wav'),
-                                        format=format,
-                                        src=audio[None, :],
-                                        sample_rate=sample_rate,
-                                        encoding=encoding,
-                                        bits_per_sample=bits_per_sample)
-                except:
-                    continue
+                    s1 = str(start).split('.')[0]
+                    s2 = str(start).split('.')[1]
 
-            #start = float(s1 + "." + s2)
-            #end   = float(e1 + "." + e2)
-            for id in texts[folder]:
-                text = texts[folder][id]
-                text = self.num_to_words(text)
-                #texts[i] = self.to_ssml(texts[i])
 
-                if ssml:
-                    audio = self.audio_model.apply_tts(ssml_text=text,
-                                                      speaker=speaker,
-                                                      sample_rate=sample_rate,
-                                                      put_accent=put_accent,
-                                                      put_yo=put_yo)
-                else:
-                    audio = self.audio_model.apply_tts(text=text,
-                                                      speaker=speaker,
-                                                      sample_rate=sample_rate,
-                                                      put_accent=put_accent,
-                                                      put_yo=put_yo)
+                    try:
+                        text = self.num_to_words(text)
+                        # texts[i] = self.to_ssml(texts[i])
+                        if ssml:
+                            audio = self.audio_model.apply_tts(ssml_text=text,
+                                                               speaker=speaker,
+                                                               sample_rate=sample_rate,
+                                                               put_accent=put_accent,
+                                                               put_yo=put_yo)
+                        else:
+                            audio = self.audio_model.apply_tts(text=text,
+                                                               speaker=speaker,
+                                                               sample_rate=sample_rate,
+                                                               put_accent=put_accent,
+                                                               put_yo=put_yo)
 
-                if save:
-                    torchaudio.save(filepath=os.path.join(output_path, f'audio_{s1}_{s2}_{e1}_{e2}.wav'),
-                                    format=format,
-                                    src=audio[None, :],
-                                    sample_rate=sample_rate,
-                                    encoding=encoding,
-                                    bits_per_sample=bits_per_sample)
+                        if save:
+                            torchaudio.save(filepath=os.path.join(output_path, f'audio_{s1}_{s2}.wav'),
+                                            format=format,
+                                            src=audio[None, :],
+                                            sample_rate=sample_rate,
+                                            encoding=encoding,
+                                            bits_per_sample=bits_per_sample)
+                    except:
+                        continue
 
 
 

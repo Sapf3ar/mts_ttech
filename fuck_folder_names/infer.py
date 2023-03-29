@@ -158,6 +158,7 @@ class BlipEngine:
         return outputs
 
     def caption(self, raw_image, **generate_kwargs) -> str:
+        print(f"raw image shape {raw_image.shape}")
         inputs = self.processor(raw_image, ' ', return_tensors='pt')
         out = self.generate_caption(inputs["pixel_values"], **generate_kwargs)
         caption = self.processor.decode(out[0], skip_special_tokens=True)

@@ -435,7 +435,4 @@ def blip_scene_inf(model, folder, pipe_sum, fold_timings, translator):
             text = pipe_sum(" ".join(texts), min_length=int(round(((fold_timings[i] - 1) * 18) / 2, 0)), max_length=int(round((fold_timings[i] - 1) * 18, 0)))
             trans_text = translator.translate(text=text[0]['summary_text'])
             folder_text[p] = [text[0]['summary_text'], trans_text]
-            print(text[0]['summary_text'])
-            print(trans_text)
-            print()
     return folder_text

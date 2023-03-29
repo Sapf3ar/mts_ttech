@@ -27,6 +27,7 @@ from scenedetect import open_video, SceneManager, split_video_ffmpeg
 from scenedetect.detectors import ContentDetector
 from scenedetect.video_splitter import split_video_ffmpeg
 from typing import List, Any
+from transformers import pipeline
 
 
 class myMKV(merge.MkvMerge):
@@ -43,14 +44,19 @@ def get_audio(input_path, output_path='out_audio.wav'):
     audioclip.write_audiofile(codec='pcm_s32le', filename=output_path)
 
 
-def audio_merge(main_file, second_path, timings, output_file='output.wav', format='wav'):
+def audio_merge(main_file, second_path, output_file='output.wav', format='wav'):
     main_sound = AudioSegment.from_file(main_file, format=format)
 
-    for i, file in enumerate(second_path):
-        # timing
-        main_sound = main_sound.overlay(AudioSegment.from_file(file, format=format), position=timings[i] * 1000)
+    file_list = glob.glob(second_path + "/*.wav")
 
-    file_handle = main_sound.export("output.wav", format=format)
+    for file in file_list:
+        time = [file[:-4].split('/')[-1].split('_')[1], file[:-4].split('/')[-1].split('_')[2]]
+        time = float(time[0] + "." + time[1])
+
+        # timing
+        main_sound = main_sound.overlay(AudioSegment.from_file(file, format=format), position=time * 1000)
+
+    file_handle = main_sound.export(output_file, format=format)
 
 
 def add_subs_to_file(path_file, path_subs, output_path):
@@ -89,9 +95,8 @@ def create_merge_obj(output_folder, ep_file):
 
 
 def add_audio_to_file(input_file, audio_file, output_file):
-    subprocess.call(
-        ['ffmpeg', '-i', input_file, '-i', input_file, '-i', audio_file, '-c', 'copy', '-map', '0:v', '-map', '1:a',
-         '-map', '3:a', output_file])
+    cmd = f'ffmpeg -i {input_file} -i {audio_file} -map 0:v -map 0:a -map 1:a -c:v copy -c:a:0 copy -c:a:1 aac -b:a:1 256k {output_file}'
+    subprocess.call(cmd, shell=True)
 
 
 def get_mkv_track_id(file_path):
@@ -368,18 +373,18 @@ def global_scene_cut(path_to_cut_videos: str):
 def question_set_inf(model, frames):
     questions = [
 
-        'What is the main event on a video?',
-        "What is shown on the picture?",
-        "What humans are doing on a video?",
-        "Where are the main objects on a video are located?",
-        "What actions are perfomed on a video?",
-        'Is there any humans on the picture? Where are they located?',
-        "What are the main objects on a video?"
+        'What is the main event?',# on a video?',
+        "What is shown?", # on a video?',
+        "What humans are doing?", # on a video?',
+        "Where are the main objects located?", # on a video?',
+        "What actions are perfomed?", # on a video?',
+        'Is there any humans on the video? Where are they located?',
+        #"What are the main objects on a video?"
         "How does scene changes throughout the video?"
-        'How much humans are on the photo?',
-        "How much non-human objects are on the photo?"
-        "What are the main non-human objects are on the photo?",
-        'How much people are on the photo? Answer with one number'
+        'How much humans here on the video?',
+        #"How much non-human objects are on the video?"
+        #"What are the main non-human objects are on the video?",
+        #'How much people are on the video? Answer with one number'
 
     ]
     texts = []
@@ -427,28 +432,10 @@ def blip_scene_inf(model, folder, pipe_sum, fold_timings, translator):
         if fold_timings[i] > 2:
             frames = read_video(p, frames_num=256)
             texts = question_set_inf(frames=frames, model=model)
-            text = translator.translate(pipe_sum(" ".join(texts), max_length=int(round((fold_timings[i] - 1) * 18, 0))))
-            folder_text[p] = text
+            text = pipe_sum(" ".join(texts), min_length=int(round(((fold_timings[i] - 1) * 18) / 2, 0)), max_length=int(round((fold_timings[i] - 1) * 18, 0)))
+            trans_text = translator.translate(text=text[0]['summary_text'])
+            folder_text[p] = [text[0]['summary_text'], trans_text]
+            print(text[0]['summary_text'])
+            print(trans_text)
+            print()
     return folder_text
-
-# def prune_video(video:np.ndarray, frames_num:int) -> np.ndarray:/
-
-# def cut_by_scenes(timecodes:List[Any], video:np.ndarray, fps:int, **prune_args)->None:
-#     for start, end in timecodes:
-#         if int(end) - int(start) < 4:
-#             pass
-#         else:
-#             frame_pos_start = fps*int(start)
-#             frame_pos_end = fps*int(end)
-
-
-
-
-
-
-
-
-            
-
-   
-

@@ -88,11 +88,13 @@ class BlipEngine:
         Initialization class parameters
 
         """
+        
         print('Initialiazing model...')
+        self.text_decoder = BlipForQuestionAnswering.from_pretrained("Salesforce/blip-vqa-base").text_decoder
         self.load_models(main_path=main_path)
         
         self.vision_model_out = self.vision_model.output(0)
-        self.text_decoder = BlipForQuestionAnswering.from_pretrained("Salesforce/blip-vqa-base").text_decoder
+        
 
         self.text_encoder_out = self.text_encoder.output(0)
         self.sep_token_id = 102

@@ -6,5 +6,5 @@ m2 = [i/100 for i in range(80, 120, 5)]
 
 
 p1 = [0.2344, 0.2336, 0.236,0.2368,  0.2368, 0.236, 0.2332, 0.2372]
-for j in range(len(p1)):
-    print(p1[j]**2/(2*0.4))
+ek = [p1[j]**2/(2*0.4) + p[j]**2/(2*m2[j]) for j in range(len(p))]
+print(sum(ek)/len(ek))

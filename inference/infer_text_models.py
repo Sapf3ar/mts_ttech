@@ -1,5 +1,3 @@
-# @title infer_text_models
-
 import torch
 from omegaconf import OmegaConf
 import torchaudio
@@ -43,6 +41,7 @@ class Text2Audio:
         numbers_to_words = ' '.join(after_spliting)
         return numbers_to_words
 
+
     def get_timings_for_audio(self, timecodes):
         fold_timings = []
         for timing in timecodes:
@@ -73,6 +72,8 @@ class Text2Audio:
 
     def write_voice(self, texts, local_timings, speaker='xenia', sample_rate=48000, ssml=False, put_accent=True,
                     put_yo=True,
+
+    def write_voice(self, texts, local_timings, speaker='xenia', sample_rate=48000, ssml=False, put_accent=True, put_yo=True,
                     save=False,
                     output_path='out_audio.wav', format='wav', bits_per_sample=64, encoding="PCM_S"):
         '''
@@ -80,7 +81,10 @@ class Text2Audio:
         sample_rate:  8000, 24000, 48000
         '''
 
+
         for i, folder in enumerate(texts):
+
+        for folder in texts:
             e2 = folder.split('/')[-1].split('_')[-1]
             e1 = folder.split('/')[-1].split('_')[-2]
             s2 = folder.split('/')[-1].split('_')[-3]
@@ -125,17 +129,53 @@ class Text2Audio:
                 except:
                     continue
 
+            #start = float(s1 + "." + s2)
+            #end   = float(e1 + "." + e2)
+            for id in texts[folder]:
+                text = texts[folder][id]
+                text = self.num_to_words(text)
+                #texts[i] = self.to_ssml(texts[i])
+
+                if ssml:
+                    audio = self.audio_model.apply_tts(ssml_text=text,
+                                                      speaker=speaker,
+                                                      sample_rate=sample_rate,
+                                                      put_accent=put_accent,
+                                                      put_yo=put_yo)
+                else:
+                    audio = self.audio_model.apply_tts(text=text,
+                                                      speaker=speaker,
+                                                      sample_rate=sample_rate,
+                                                      put_accent=put_accent,
+                                                      put_yo=put_yo)
+
+                if save:
+                    torchaudio.save(filepath=os.path.join(output_path, f'audio_{s1}_{s2}_{e1}_{e2}.wav'),
+                                    format=format,
+                                    src=audio[None, :],
+                                    sample_rate=sample_rate,
+                                    encoding=encoding,
+                                    bits_per_sample=bits_per_sample)
+
+
+
+
 
 class Translator:
     def __init__(self) -> None:
+
+
         self.translate_tokenizer = AutoTokenizer.from_pretrained("Helsinki-NLP/opus-mt-en-ru")
         self.translate_model = AutoModelForSeq2SeqLM.from_pretrained("Helsinki-NLP/opus-mt-en-ru")
 
     def translate(self, text, **kwargs):
+
+
         self.translate_model.eval()
         inputs = self.translate_tokenizer(text, return_tensors='pt')
         with torch.no_grad():
             hypotheses = self.translate_model.generate(**inputs, **kwargs)
         return self.translate_tokenizer.decode(hypotheses[0], skip_special_tokens=True)
+
 
 

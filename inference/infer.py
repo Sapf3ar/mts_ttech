@@ -84,19 +84,21 @@ class BlipEngine:
     Model class for inference BLIP model with OpenVINO
     """
 
-    def __init__(self, main_path: str):
+    def __init__(self, main_path: str, device_name:str="GPU"):
         """
         Initialization class parameters
         """
 
         print('Initialiazing model...')
         self.text_decoder = BlipForQuestionAnswering.from_pretrained("Salesforce/blip-vqa-base").text_decoder
+        self.device_naame = device_name
         self.load_models(main_path=main_path)
 
         self.vision_model_out = self.vision_model.output(0)
 
         self.text_encoder_out = self.text_encoder.output(0)
         self.sep_token_id = 102
+
         self.text_config = {
             "attention_probs_dropout_prob": 0.0,
             "bos_token_id": 30522,
@@ -175,16 +177,16 @@ class BlipEngine:
             "blip_vision_model.onnx"
         ]
         model_onnx = ie.read_model(model=os.path.join(main_path, paths[0]))
-        encoder_engine = ie.compile_model(model=model_onnx, device_name="CPU")
+        encoder_engine = ie.compile_model(model=model_onnx, device_name=self.device_name)
         print("Encoder loaded...")
         model_onnx = ie.read_model(model=os.path.join(main_path, paths[1]))
-        decoder_engine = ie.compile_model(model=model_onnx, device_name="CPU")
+        decoder_engine = ie.compile_model(model=model_onnx, device_name=self.device_name)
         print("Decoder loaded...")
         model_onnx = ie.read_model(model=os.path.join(main_path, paths[2]))
-        decoder_qa_engine = ie.compile_model(model=model_onnx, device_name="CPU")
+        decoder_qa_engine = ie.compile_model(model=model_onnx, device_name=self.device_name)
 
         model_onnx = ie.read_model(model=os.path.join(main_path, paths[3]))
-        visual_engine = ie.compile_model(model=model_onnx, device_name="CPU")
+        visual_engine = ie.compile_model(model=model_onnx, device_name=self.device_name)
         print("Visual model loaded..")
         print("All model loaded..")
         self.vision_model = visual_engine

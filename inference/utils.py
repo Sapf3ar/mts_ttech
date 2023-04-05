@@ -331,10 +331,9 @@ def split_video_into_scenes(video_path, save_path, threshold=30.0):
     scene_list = scene_manager.get_scene_list()
     pruned_scenes = []
     for start, end in scene_list:
-        if int(end) - int(start) < 4:
-            pass
-        else:
+        if int(end) - int(start) > 4:
             pruned_scenes.append([start, end])
+        
     os.chdir(save_path)
     split_video_ffmpeg(video_path, pruned_scenes, show_progress=False)
     return pruned_scenes
